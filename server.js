@@ -12,6 +12,8 @@ const SERVER_URL = process.env.SERVER_URL || "http://localhost:" + PORT;
 const TRIAL_DAYS = 7;
 const db = new Database("heimdall.db");
 db.exec("CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, stripe_customer_id TEXT, subscription_status TEXT DEFAULT 'none', trial_start TEXT, trial_end TEXT, created_at TEXT DEFAULT (datetime('now'))); CREATE TABLE IF NOT EXISTS promo_codes (code TEXT PRIMARY KEY, free_days INTEGER DEFAULT 30, max_uses INTEGER DEFAULT 1, times_used INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now'))); CREATE TABLE IF NOT EXISTS promo_redemptions (email TEXT, code TEXT, redeemed_at TEXT DEFAULT (datetime('now')), expires_at TEXT, PRIMARY KEY (email, code));");
+try { db.prepare("INSERT OR IGNORE INTO promo_codes (code, free_days, max_uses) VALUES (?, ?, ?)").run("THORVIP", 9999, 1); } catch(e) {}
+try { db.prepare("INSERT OR IGNORE INTO promo_codes (code, free_days, max_uses) VALUES (?, ?, ?)").run("FRIEND30", 30, 100); } catch(e) {}
 app.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
 app.use(cors());
 app.use(express.json());

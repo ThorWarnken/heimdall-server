@@ -4,46 +4,222 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heimdall - Privacy Policy</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
+            font-family: 'DM Sans', sans-serif;
+            line-height: 1.75;
+            color: #c8ccd4;
+            background: #0a0a0f;
+            padding: 40px 20px 80px;
         }
-        h1 { color: #333; }
-        h2 { color: #555; margin-top: 30px; }
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+        a { color: #7eb8da; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 40px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #c8ccd4; text-decoration: none; }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            color: #e8eaed;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .last-updated {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        h2 {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin: 40px 0 14px;
+            letter-spacing: -0.01em;
+        }
+        h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin: 24px 0 10px;
+        }
+        p { margin-bottom: 14px; font-size: 15px; }
+        ul, ol {
+            margin: 10px 0 18px 24px;
+            font-size: 15px;
+        }
+        li { margin-bottom: 8px; }
+
+        /* Highlight box for Google compliance */
+        .compliance-box {
+            background: rgba(126, 184, 218, 0.06);
+            border: 1px solid rgba(126, 184, 218, 0.15);
+            border-radius: 10px;
+            padding: 24px 28px;
+            margin: 24px 0;
+        }
+        .compliance-box h3 {
+            color: #7eb8da;
+            margin-top: 0;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            margin: 40px 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 13px;
+            color: #475569;
+        }
     </style>
 </head>
 <body>
-    <h1>Privacy Policy for Heimdall</h1>
-    <p><strong>Last Updated:</strong> February 14, 2026</p>
+    <div class="container">
+        <a href="/" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to Heimdall
+        </a>
 
-    <h2>Overview</h2>
-    <p>Heimdall is a Chrome extension that helps you manage your Gmail inbox. This privacy policy explains how we handle your data.</p>
+        <h1>Privacy Policy</h1>
+        <p class="last-updated">Last Updated: February 17, 2026</p>
 
-    <h2>Data Collection</h2>
-    <p>Heimdall accesses your Gmail account to:</p>
-    <ul>
-        <li>Read and organize your email messages</li>
-        <li>Apply labels and filters</li>
-        <li>Manage inbox settings</li>
-    </ul>
+        <p>Heimdall ("we", "our", or "the extension") is a Chrome browser extension that helps users manage their Gmail inbox by identifying subscription and promotional emails and providing tools to unsubscribe from unwanted senders. This Privacy Policy explains how Heimdall accesses, uses, stores, and protects your data.</p>
 
-    <h2>Data Storage</h2>
-    <p>All data processing happens locally in your browser. We do not store your emails or personal information on our servers.</p>
+        <!-- ===== GOOGLE API COMPLIANCE ===== -->
+        <div class="compliance-box">
+            <h3>Google API Services User Data Policy Compliance</h3>
+            <p>Heimdall's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank" rel="noopener">Limited Use requirements</a>.</p>
+        </div>
 
-    <h2>Data Sharing</h2>
-    <p>We do not sell, trade, or share your data with third parties. Your Gmail data remains private and is only accessed by you through the extension.</p>
+        <h2>1. Information We Access</h2>
+        <p>When you sign in with Google and grant permission, Heimdall accesses the following Gmail data through the Gmail API:</p>
+        <ul>
+            <li><strong>Email message headers</strong> — including sender name, sender address, subject line, and date. This is used to identify subscription and promotional emails in your inbox.</li>
+            <li><strong>List-Unsubscribe headers</strong> — a standard email header that contains the unsubscribe URL or mailto address for subscription emails. This is used to process unsubscribe requests on your behalf.</li>
+            <li><strong>Email labels and categories</strong> — used to filter for promotional and subscription emails (e.g., the Gmail "Promotions" category).</li>
+        </ul>
+        <p>Heimdall does <strong>not</strong> access or read the body/content of your emails. We only access the metadata and headers listed above.</p>
 
-    <h2>Authentication</h2>
-    <p>We use Google OAuth 2.0 for secure authentication. We only request the minimum permissions necessary to provide our service.</p>
+        <h2>2. How We Use Your Data</h2>
+        <p>Your Gmail data is used exclusively for the following purposes:</p>
+        <ul>
+            <li><strong>Scanning</strong> — Identifying subscription and promotional emails in your inbox by reading message headers.</li>
+            <li><strong>Displaying results</strong> — Showing you a list of senders with email counts and frequency so you can decide which to keep or unsubscribe from.</li>
+            <li><strong>Unsubscribing</strong> — Processing unsubscribe requests using the List-Unsubscribe header and, when authorized, moving unwanted emails to trash.</li>
+        </ul>
 
-    <h2>Changes to This Policy</h2>
-    <p>We may update this privacy policy from time to time. Any changes will be posted on this page.</p>
+        <h2>3. Data Storage</h2>
+        <p>Heimdall processes your email data <strong>locally in your browser</strong>. Specifically:</p>
+        <ul>
+            <li>Email scanning and analysis happens entirely within the Chrome extension running on your device.</li>
+            <li>We do <strong>not</strong> store your email messages, headers, or any Gmail content on any external server.</li>
+            <li>Your Google OAuth authentication token is stored locally in Chrome's secure storage (<code>chrome.storage.local</code>) and is only used to authenticate API requests to Gmail.</li>
+            <li>Basic account information (email address) is sent to our server solely to verify your subscription status for the paid service. No Gmail data is sent to our server.</li>
+        </ul>
 
-    <h2>Contact</h2>
-    <p>If you have questions about this privacy policy, please contact us through the Chrome Web Store.</p>
+        <h2>4. Data Sharing &amp; Transfer</h2>
+        <p>We do <strong>not</strong> sell, trade, rent, or share your Google user data with any third parties. Specifically:</p>
+        <ul>
+            <li>Your data is never transferred or sold to third parties including advertising platforms, data brokers, or information resellers.</li>
+            <li>Your data is never used for serving ads, including retargeting, personalized, or interest-based advertising.</li>
+            <li>Your data is never used to determine credit-worthiness or for lending purposes.</li>
+            <li>Your data is never used for AI model training.</li>
+        </ul>
+        <p>Data may only be transferred in the following limited circumstances:</p>
+        <ul>
+            <li>For security purposes, such as investigating abuse or security incidents.</li>
+            <li>To comply with applicable laws or legal processes.</li>
+            <li>As part of a merger, acquisition, or sale of assets, but only after obtaining explicit prior consent from the user.</li>
+        </ul>
+
+        <h2>5. Human Access to Data</h2>
+        <p>No humans (including Heimdall employees, agents, contractors, or successors) read your Gmail data, unless:</p>
+        <ul>
+            <li>You provide affirmative consent to view specific data for support purposes.</li>
+            <li>It is necessary for security purposes (e.g., investigating a bug or abuse).</li>
+            <li>It is necessary to comply with applicable law.</li>
+            <li>The data is aggregated and anonymized and used for internal operations in accordance with applicable privacy requirements.</li>
+        </ul>
+
+        <!-- ===== LIMITED USE DISCLOSURE ===== -->
+        <div class="compliance-box">
+            <h3>Limited Use Disclosure</h3>
+            <p>Heimdall's use of Google user data is limited to providing and improving the user-facing features described in this policy — specifically, scanning for subscription emails and providing unsubscribe functionality. We do not use Google user data for any purpose other than providing and improving these features that are prominent in the Heimdall extension interface.</p>
+        </div>
+
+        <h2>6. Permissions We Request</h2>
+        <p>Heimdall requests the following Google OAuth scope:</p>
+        <ul>
+            <li><code>https://www.googleapis.com/auth/gmail.modify</code> — This scope allows Heimdall to read email headers (to identify subscriptions) and modify emails (to move unwanted subscription emails to trash when you click "Unsubscribe"). This is the narrowest scope that supports both reading headers and managing emails on your behalf.</li>
+        </ul>
+        <p>We follow the principle of minimum required access and only request the scopes necessary for Heimdall to function.</p>
+
+        <h2>7. Authentication &amp; Security</h2>
+        <ul>
+            <li>We use Google OAuth 2.0 for secure authentication.</li>
+            <li>Your Google password is never shared with or stored by Heimdall.</li>
+            <li>OAuth tokens are stored in Chrome's built-in secure storage.</li>
+            <li>You can revoke Heimdall's access at any time through your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">Google Account permissions</a>.</li>
+        </ul>
+
+        <h2>8. Payment Information</h2>
+        <p>Subscription payments are processed by <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe</a>. Heimdall does not collect, store, or process any payment card information. All payment data is handled directly by Stripe in accordance with their privacy policy and PCI compliance standards.</p>
+
+        <h2>9. In-Product Privacy Notifications</h2>
+        <p>Heimdall displays a privacy notice within the extension interface when you first sign in, including a link to this Privacy Policy. This ensures you are aware of how your data is handled before granting access to your Gmail account.</p>
+
+        <h2>10. Data Retention &amp; Deletion</h2>
+        <ul>
+            <li>Email scan results are stored only in your browser's memory during your active session and are cleared when the extension popup closes.</li>
+            <li>If you uninstall Heimdall, all locally stored data (OAuth tokens, preferences) is automatically removed by Chrome.</li>
+            <li>You can revoke Gmail access at any time through your Google Account settings.</li>
+            <li>To request deletion of your subscription account data, contact us at the email below.</li>
+        </ul>
+
+        <h2>11. Children's Privacy</h2>
+        <p>Heimdall is not intended for use by anyone under the age of 13. We do not knowingly collect data from children under 13.</p>
+
+        <h2>12. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last Updated" date. Continued use of Heimdall after changes constitutes acceptance of the updated policy.</p>
+
+        <h2>13. Contact</h2>
+        <p>If you have questions about this Privacy Policy or how Heimdall handles your data, please contact us:</p>
+        <ul>
+            <li>Email: <a href="mailto:thorwarnken@gmail.com">thorwarnken@gmail.com</a></li>
+            <li>Website: <a href="https://heimdallprotections.com">heimdallprotections.com</a></li>
+        </ul>
+
+        <hr class="divider">
+
+        <footer>
+            <p>&copy; 2026 Heimdall. Built by Thor Warnken.</p>
+        </footer>
+    </div>
 </body>
 </html>

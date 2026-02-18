@@ -832,109 +832,551 @@ document.querySelectorAll('.btn-c, .btn-o, .nav-r a').forEach(el => {
 // 3D ICONS (same as previous - Chrome globe, magnifying glass, trash)
 // =========================================================================
 const DPR = window.devicePixelRatio || 1;
-function setupCanvas(id, w, h) {
+function initCanvas(id) {
   const c = document.getElementById(id);
   if (!c) return null;
+  const rect = c.parentElement.getBoundingClientRect();
+  const w = rect.width, h = rect.height;
   c.width = w * DPR; c.height = h * DPR;
   c.style.width = w + 'px'; c.style.height = h + 'px';
-  const ctx = c.getContext('2d'); ctx.scale(DPR, DPR);
-  return { c, ctx, w, h };
+  const ctx = c.getContext('2d');
+  ctx.scale(DPR, DPR);
+  let mx = 0.5, my = 0.5, hov = false;
+  c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width; my = (e.clientY - r.top) / r.height; hov = true; });
+  c.addEventListener('mouseleave', () => { hov = false; });
+  return { c, ctx, w, h, mouse: () => ({ x: hov ? mx : 0.5, y: hov ? my : 0.5, hover: hov }) };
 }
+function ease(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
 
-// == CHROME GLOBE ==
-(function() {
-  const setup = setupCanvas('c_install', 320, 240);
-  if (!setup) return;
-  const { c, ctx, w, h } = setup;
-  const cx = w/2, cy = h/2, R = 52;
-  let dragX = 0, dragY = 0, isDragging = false, rotX = 0, rotY = 0, velX = 0, velY = 0, lastMX = 0, lastMY = 0;
-  c.addEventListener('mousedown', (e) => { isDragging = true; const rect = c.getBoundingClientRect(); lastMX = e.clientX - rect.left; lastMY = e.clientY - rect.top; velX = 0; velY = 0; });
-  c.addEventListener('mousemove', (e) => { const rect = c.getBoundingClientRect(); const mx = e.clientX - rect.left; const my = e.clientY - rect.top; if (isDragging) { velX = (mx - lastMX) * 0.01; velY = (my - lastMY) * 0.01; rotY += velX; rotX += velY; lastMX = mx; lastMY = my; } dragX = (mx / rect.width - 0.5) * 2; dragY = (my / rect.height - 0.5) * 2; });
-  c.addEventListener('mouseup', () => { isDragging = false; });
-  c.addEventListener('mouseleave', () => { isDragging = false; dragX = 0; dragY = 0; });
-  const segDef = [
-    { startA: -Math.PI/2 - 0.35, endA: Math.PI*2/3 - Math.PI/2 - 0.35, color1: '#EA4335', color2: '#C5221F' },
-    { startA: Math.PI*2/3 - Math.PI/2 - 0.35, endA: Math.PI*4/3 - Math.PI/2 - 0.35, color1: '#FBBC04', color2: '#E8A800' },
-    { startA: Math.PI*4/3 - Math.PI/2 - 0.35, endA: Math.PI*2 - Math.PI/2 - 0.35, color1: '#34A853', color2: '#1E8E3E' },
-  ];
-  function draw(t) {
-    ctx.clearRect(0,0,w,h);
-    if (!isDragging) { rotY += 0.003 + velX; rotX *= 0.97; velX *= 0.98; velY *= 0.98; }
-    const bob = Math.sin(t * 0.002) * 3;
-    const lx = dragX, ly = dragY;
-    ctx.save(); ctx.translate(cx, cy + bob);
-    ctx.save(); const sg = ctx.createRadialGradient(3, R*0.55, R*0.15, 3, R*0.6, R*1.3); sg.addColorStop(0, 'rgba(40,40,60,0.1)'); sg.addColorStop(1, 'rgba(40,40,60,0)'); ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(3, R*0.65, R*1.05, R*0.28, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
-    const innerR = R * 0.38, outerR = R;
-    ctx.save(); ctx.beginPath(); ctx.arc(0, 0, outerR, 0, Math.PI*2); ctx.clip();
-    segDef.forEach((seg) => { const sa = seg.startA + rotY; const ea = seg.endA + rotY; ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,outerR+1,sa,ea); ctx.closePath(); const midA = (sa+ea)/2; const segG = ctx.createRadialGradient(Math.cos(midA)*outerR*0.15+lx*10, Math.sin(midA)*outerR*0.15+ly*10, 0, 0, 0, outerR); segG.addColorStop(0, seg.color1); segG.addColorStop(0.7, seg.color1); segG.addColorStop(1, seg.color2); ctx.fillStyle = segG; ctx.fill(); });
-    const shade = ctx.createRadialGradient(lx*R*0.2-R*0.15, ly*R*0.2-R*0.2, R*0.05, 0, 0, outerR); shade.addColorStop(0, 'rgba(255,255,255,0.12)'); shade.addColorStop(0.25, 'rgba(255,255,255,0.04)'); shade.addColorStop(0.55, 'rgba(0,0,0,0)'); shade.addColorStop(0.8, 'rgba(0,0,0,0.12)'); shade.addColorStop(1, 'rgba(0,0,0,0.3)'); ctx.fillStyle = shade; ctx.fillRect(-outerR,-outerR,outerR*2,outerR*2); ctx.restore();
-    ctx.beginPath(); ctx.arc(0,0,innerR,0,Math.PI*2); ctx.lineWidth = R*0.11; const ringG = ctx.createLinearGradient(-innerR,-innerR,innerR,innerR); ringG.addColorStop(0,'#ffffff'); ringG.addColorStop(0.5,'#f8f8fa'); ringG.addColorStop(1,'#e8e8ee'); ctx.strokeStyle = ringG; ctx.stroke();
-    const blueR = innerR - R*0.06; ctx.beginPath(); ctx.arc(0,0,blueR,0,Math.PI*2); const bg = ctx.createRadialGradient(lx*blueR*0.2-blueR*0.2,ly*blueR*0.2-blueR*0.25,blueR*0.05,0,0,blueR); bg.addColorStop(0,'#7ABAFF'); bg.addColorStop(0.25,'#5AA0F5'); bg.addColorStop(0.55,'#4285F4'); bg.addColorStop(0.85,'#3070D4'); bg.addColorStop(1,'#2555A8'); ctx.fillStyle=bg; ctx.fill();
-    ctx.beginPath(); ctx.ellipse(lx*blueR*0.15-blueR*0.15,ly*blueR*0.15-blueR*0.25,blueR*0.45,blueR*0.22,-0.4,0,Math.PI*2); const bSpecG=ctx.createRadialGradient(lx*blueR*0.15-blueR*0.15,ly*blueR*0.15-blueR*0.25,0,lx*blueR*0.15-blueR*0.15,ly*blueR*0.15-blueR*0.25,blueR*0.4); bSpecG.addColorStop(0,'rgba(255,255,255,0.5)'); bSpecG.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=bSpecG; ctx.fill();
-    const specCx=lx*R*0.2-R*0.2, specCy=ly*R*0.2-R*0.28; ctx.beginPath(); ctx.ellipse(specCx,specCy,R*0.4,R*0.2,-0.35+lx*0.15,0,Math.PI*2); const mainSpec=ctx.createRadialGradient(specCx,specCy,0,specCx,specCy,R*0.38); mainSpec.addColorStop(0,'rgba(255,255,255,0.45)'); mainSpec.addColorStop(0.4,'rgba(255,255,255,0.1)'); mainSpec.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=mainSpec; ctx.fill();
-    const rimA=Math.atan2(-specCy,-specCx); ctx.beginPath(); ctx.arc(0,0,outerR-0.5,rimA-0.7,rimA+0.7); ctx.lineWidth=1.5; ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0,0,outerR,0,Math.PI*2); ctx.lineWidth=0.5; ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.stroke();
-    ctx.restore(); requestAnimationFrame(draw);
-  }
-  requestAnimationFrame(draw);
-})();
 
-// == MAGNIFYING GLASS ==
+// =====================================================
+// 1. INSTALL — Draggable Chrome Sphere
+// Drag to spin like a ball with momentum + friction
+// =====================================================
 (function() {
-  const setup = setupCanvas('c_scan', 320, 240);
+  const setup = initCanvas('c_install');
   if (!setup) return;
   const { c, ctx, w, h } = setup;
   const cx = w/2, cy = h/2;
+
+  // Spin state
+  let rotY = 0, rotX = 0;
+  let velY = 0.003, velX = 0;  // gentle idle spin
+  let dragging = false, lastMX = 0, lastMY = 0;
+  let dragVelX = 0, dragVelY = 0;
+
+  c.addEventListener('mousedown', e => {
+    dragging = true;
+    const r = c.getBoundingClientRect();
+    lastMX = e.clientX - r.left;
+    lastMY = e.clientY - r.top;
+    dragVelX = 0; dragVelY = 0;
+  });
+  c.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const r = c.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    dragVelY = (mx - lastMX) * 0.012;
+    dragVelX = (my - lastMY) * 0.012;
+    rotY += dragVelY;
+    rotX += dragVelX;
+    lastMX = mx; lastMY = my;
+  });
+  c.addEventListener('mouseup', () => {
+    if (dragging) { velY = dragVelY; velX = dragVelX; }
+    dragging = false;
+  });
+  c.addEventListener('mouseleave', () => {
+    if (dragging) { velY = dragVelY; velX = dragVelX; }
+    dragging = false;
+  });
+  // Touch support
+  c.addEventListener('touchstart', e => {
+    e.preventDefault(); dragging = true;
+    const r = c.getBoundingClientRect();
+    lastMX = e.touches[0].clientX - r.left;
+    lastMY = e.touches[0].clientY - r.top;
+    dragVelX = 0; dragVelY = 0;
+  }, { passive: false });
+  c.addEventListener('touchmove', e => {
+    if (!dragging) return; e.preventDefault();
+    const r = c.getBoundingClientRect();
+    const mx = e.touches[0].clientX - r.left, my = e.touches[0].clientY - r.top;
+    dragVelY = (mx - lastMX) * 0.012;
+    dragVelX = (my - lastMY) * 0.012;
+    rotY += dragVelY; rotX += dragVelX;
+    lastMX = mx; lastMY = my;
+  }, { passive: false });
+  c.addEventListener('touchend', () => {
+    if (dragging) { velY = dragVelY; velX = dragVelX; }
+    dragging = false;
+  });
+
   function draw(t) {
-    ctx.clearRect(0,0,w,h);
-    const totalAngle = t * 0.001;
-    const xScale = 0.35 + 0.65 * Math.abs(Math.cos(totalAngle * 0.7));
+    ctx.clearRect(0, 0, w, h);
+
+    // Physics: apply velocity + friction
+    if (!dragging) {
+      rotY += velY;
+      rotX += velX;
+      // Friction — slow down, but keep a tiny idle spin on Y
+      velY *= 0.985;
+      velX *= 0.985;
+      // If almost stopped, nudge back to gentle idle spin
+      if (Math.abs(velY) < 0.002 && Math.abs(velX) < 0.001) {
+        velY += (0.003 - velY) * 0.01;
+      }
+    }
+
     const bob = Math.sin(t * 0.0018) * 3;
-    const tilt = Math.sin(totalAngle * 0.5) * 0.08;
-    ctx.save(); ctx.translate(cx, cy + bob); ctx.rotate(tilt); ctx.scale(xScale, 1);
-    const lensR = 36;
-    ctx.save(); const sg = ctx.createRadialGradient(3,6,10,3,6,75); sg.addColorStop(0,'rgba(60,70,90,0.08)'); sg.addColorStop(1,'rgba(60,70,90,0)'); ctx.fillStyle=sg; ctx.beginPath(); ctx.ellipse(3,8,70,25,0,0,Math.PI*2); ctx.fill(); ctx.restore();
-    ctx.save(); ctx.rotate(0.78); const hGrad = ctx.createLinearGradient(lensR, -4.5, lensR, 4.5); hGrad.addColorStop(0,'#a0c0d8'); hGrad.addColorStop(0.2,'#d0e4f0'); hGrad.addColorStop(0.4,'#e8f0f8'); hGrad.addColorStop(0.6,'#b8d0e4'); hGrad.addColorStop(0.8,'#88aac8'); hGrad.addColorStop(1,'#6a90b0'); ctx.beginPath(); ctx.roundRect(lensR-6,-4.5,40,9,4); ctx.fillStyle=hGrad; ctx.fill(); ctx.beginPath(); ctx.roundRect(lensR,-2.5,32,2,1); ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.fill(); ctx.restore();
-    ctx.beginPath(); ctx.arc(0,0,lensR+4,0,Math.PI*2); const ringG = ctx.createLinearGradient(-lensR,-lensR,lensR,lensR); ringG.addColorStop(0,'#7a9ab8'); ringG.addColorStop(0.25,'#c8dce8'); ringG.addColorStop(0.5,'#e8f0f8'); ringG.addColorStop(0.75,'#90b0cc'); ringG.addColorStop(1,'#5a7a9c'); ctx.lineWidth=6; ctx.strokeStyle=ringG; ctx.stroke();
-    ctx.beginPath(); ctx.arc(0,0,lensR,0,Math.PI*2); const lensG = ctx.createRadialGradient(-12,-12,0,0,0,lensR); lensG.addColorStop(0,'rgba(220,235,250,0.3)'); lensG.addColorStop(0.5,'rgba(200,220,245,0.12)'); lensG.addColorStop(1,'rgba(160,190,230,0.06)'); ctx.fillStyle=lensG; ctx.fill();
-    const scanY = Math.sin(t*0.003)*lensR*0.75; ctx.save(); ctx.beginPath(); ctx.arc(0,0,lensR-2,0,Math.PI*2); ctx.clip(); ctx.beginPath(); ctx.moveTo(-lensR,scanY); ctx.lineTo(lensR,scanY); ctx.lineWidth=12; const bGl=ctx.createLinearGradient(-lensR,0,lensR,0); bGl.addColorStop(0,'transparent'); bGl.addColorStop(0.3,'rgba(66,133,244,0.06)'); bGl.addColorStop(0.5,'rgba(66,133,244,0.1)'); bGl.addColorStop(0.7,'rgba(66,133,244,0.06)'); bGl.addColorStop(1,'transparent'); ctx.strokeStyle=bGl; ctx.stroke(); ctx.beginPath(); ctx.moveTo(-lensR,scanY); ctx.lineTo(lensR,scanY); ctx.lineWidth=2; const bLn=ctx.createLinearGradient(-lensR,0,lensR,0); bLn.addColorStop(0,'transparent'); bLn.addColorStop(0.2,'rgba(66,133,244,0.5)'); bLn.addColorStop(0.5,'rgba(66,133,244,0.8)'); bLn.addColorStop(0.8,'rgba(66,133,244,0.5)'); bLn.addColorStop(1,'transparent'); ctx.strokeStyle=bLn; ctx.stroke(); ctx.restore();
-    ctx.beginPath(); ctx.ellipse(-10,-14,18,9,-0.3,0,Math.PI*2); const spG=ctx.createRadialGradient(-10,-14,0,-10,-14,16); spG.addColorStop(0,'rgba(255,255,255,0.5)'); spG.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=spG; ctx.fill();
+    const R = Math.min(w, h) * 0.22;
+    // Use rotX to simulate a light shift (we can't truly 3D rotate segments,
+    // but we shift the specular and depth based on accumulated X rotation)
+    const lx = Math.sin(rotY) * 0.6;
+    const ly = Math.sin(rotX) * 0.6;
+
+    ctx.save();
+    ctx.translate(cx, cy + bob);
+
+    // Drop shadow
+    ctx.save(); ctx.filter = 'blur(18px)';
+    ctx.beginPath(); ctx.ellipse(2, R*0.7, R*0.9, R*0.22, 0, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fill(); ctx.restore();
+
+    // Ambient glow
+    ctx.save(); ctx.beginPath(); ctx.arc(0, 0, R*1.7, 0, Math.PI*2);
+    const ambG = ctx.createRadialGradient(0,0,R*0.3,0,0,R*1.7);
+    ambG.addColorStop(0,'rgba(66,133,244,0.04)'); ambG.addColorStop(0.5,'rgba(66,133,244,0.02)'); ambG.addColorStop(1,'transparent');
+    ctx.fillStyle = ambG; ctx.fill(); ctx.restore();
+
+    const outerR = R, innerR = R * 0.42;
+
+    // Clipped sphere with color segments — rotY drives segment rotation
+    ctx.save(); ctx.beginPath(); ctx.arc(0,0,outerR,0,Math.PI*2); ctx.clip();
+
+    const segs = [
+      { start: -Math.PI/2 - 0.35, c1: '#EA4335', c2: '#C5221F' },
+      { start: Math.PI*2/3 - Math.PI/2 - 0.35, c1: '#FBBC04', c2: '#E8A800' },
+      { start: Math.PI*4/3 - Math.PI/2 - 0.35, c1: '#34A853', c2: '#1E8E3E' },
+    ];
+    segs.forEach(seg => {
+      const sa = seg.start + rotY, ea = sa + Math.PI*2/3;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,outerR+1,sa,ea); ctx.closePath();
+      const midA = (sa+ea)/2;
+      const sG = ctx.createRadialGradient(Math.cos(midA)*outerR*0.12+lx*10, Math.sin(midA)*outerR*0.12+ly*10, 0, 0, 0, outerR);
+      sG.addColorStop(0, seg.c1); sG.addColorStop(0.65, seg.c1); sG.addColorStop(1, seg.c2);
+      ctx.fillStyle = sG; ctx.fill();
+    });
+
+    // 3D depth shading
+    const dG = ctx.createRadialGradient(lx*R*0.3-R*0.1, ly*R*0.3-R*0.15, R*0.06, 0, 0, outerR);
+    dG.addColorStop(0,'rgba(255,255,255,0.16)'); dG.addColorStop(0.2,'rgba(255,255,255,0.06)');
+    dG.addColorStop(0.5,'rgba(0,0,0,0)'); dG.addColorStop(0.75,'rgba(0,0,0,0.14)'); dG.addColorStop(1,'rgba(0,0,0,0.3)');
+    ctx.fillStyle = dG; ctx.fillRect(-outerR,-outerR,outerR*2,outerR*2);
     ctx.restore();
-    const dots=[{color:'#4285F4',ox:48,oy:-42,sp:0.002,amp:7},{color:'#EA4335',ox:-45,oy:34,sp:0.0025,amp:5},{color:'#34A853',ox:40,oy:30,sp:0.0018,amp:8},{color:'#FBBC04',ox:-38,oy:-34,sp:0.0022,amp:6}];
-    dots.forEach(d=>{const dx=cx+d.ox+Math.sin(t*d.sp)*d.amp;const dy=cy+d.oy+Math.cos(t*d.sp*1.3)*d.amp+bob;const pulse=3+Math.sin(t*d.sp*2)*1.2;ctx.save();ctx.beginPath();ctx.arc(dx,dy,pulse,0,Math.PI*2);ctx.fillStyle=d.color;ctx.globalAlpha=0.55+Math.sin(t*d.sp)*0.25;ctx.fill();ctx.beginPath();ctx.arc(dx,dy,pulse*2.5,0,Math.PI*2);ctx.fillStyle=d.color;ctx.globalAlpha=0.06;ctx.fill();ctx.restore()});
+
+    // White ring
+    ctx.beginPath(); ctx.arc(0,0,innerR,0,Math.PI*2);
+    ctx.lineWidth = R*0.09;
+    const riG = ctx.createLinearGradient(-innerR,-innerR,innerR,innerR);
+    riG.addColorStop(0,'#fff'); riG.addColorStop(0.3,'#f0f0f4'); riG.addColorStop(0.7,'#e8e8ee'); riG.addColorStop(1,'#fff');
+    ctx.strokeStyle = riG; ctx.stroke();
+
+    // Blue center orb
+    const blueR = innerR - R*0.05;
+    ctx.beginPath(); ctx.arc(0,0,blueR,0,Math.PI*2);
+    const bG = ctx.createRadialGradient(lx*blueR*0.25-blueR*0.12, ly*blueR*0.25-blueR*0.18, blueR*0.04, 0, 0, blueR);
+    bG.addColorStop(0,'#7ABAFF'); bG.addColorStop(0.2,'#5AA0F5'); bG.addColorStop(0.5,'#4285F4'); bG.addColorStop(0.8,'#3070D4'); bG.addColorStop(1,'#2555A8');
+    ctx.fillStyle = bG; ctx.fill();
+
+    // Specular on blue center
+    ctx.beginPath();
+    ctx.ellipse(lx*blueR*0.15-blueR*0.1, ly*blueR*0.15-blueR*0.2, blueR*0.4, blueR*0.17, -0.35, 0, Math.PI*2);
+    const bSG = ctx.createRadialGradient(lx*blueR*0.15-blueR*0.1, ly*blueR*0.15-blueR*0.2, 0, lx*blueR*0.15-blueR*0.1, ly*blueR*0.15-blueR*0.2, blueR*0.38);
+    bSG.addColorStop(0,'rgba(255,255,255,0.55)'); bSG.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle = bSG; ctx.fill();
+
+    // Main specular highlight — shifts with rotation
+    const spX = lx*R*0.2-R*0.16, spY = ly*R*0.2-R*0.24;
+    ctx.beginPath(); ctx.ellipse(spX, spY, R*0.36, R*0.17, -0.3+lx*0.15, 0, Math.PI*2);
+    const msG = ctx.createRadialGradient(spX,spY,0,spX,spY,R*0.34);
+    msG.addColorStop(0,'rgba(255,255,255,0.4)'); msG.addColorStop(0.4,'rgba(255,255,255,0.08)'); msG.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle = msG; ctx.fill();
+
+    // Rim highlight
+    const rimA = Math.atan2(-spY,-spX);
+    ctx.beginPath(); ctx.arc(0,0,outerR-0.5,rimA-0.6,rimA+0.6);
+    ctx.lineWidth=1.2; ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.stroke();
+
+    // Outer edge
+    ctx.beginPath(); ctx.arc(0,0,outerR,0,Math.PI*2);
+    ctx.lineWidth=0.5; ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.stroke();
+
+    // Orbiting dots
+    const cols = ['#EA4335','#4285F4','#34A853','#FBBC04'];
+    for (let i = 0; i < 4; i++) {
+      const oR = R*1.25+i*4;
+      const ang = t*0.001*(0.6+i*0.15)+i*1.57;
+      const dx = Math.cos(ang)*oR, dy = Math.sin(ang)*oR*0.45;
+      const behind = Math.sin(ang) < 0;
+      const dA = behind ? 0.08 : 0.25+Math.sin(t*0.003+i)*0.1;
+      const dR = behind ? 1.2 : 1.8;
+      ctx.save(); ctx.globalAlpha = dA;
+      ctx.beginPath(); ctx.arc(dx,dy,dR,0,Math.PI*2); ctx.fillStyle=cols[i]; ctx.fill();
+      ctx.beginPath(); ctx.arc(dx,dy,dR*4,0,Math.PI*2);
+      const gG=ctx.createRadialGradient(dx,dy,0,dx,dy,dR*4);
+      gG.addColorStop(0,cols[i]); gG.addColorStop(1,'transparent');
+      ctx.fillStyle=gG; ctx.globalAlpha=dA*0.2; ctx.fill();
+      ctx.restore();
+    }
+
+    ctx.restore();
     requestAnimationFrame(draw);
   }
   requestAnimationFrame(draw);
 })();
 
-// == TRASH BIN ==
+
+// =====================================================
+// 2. SCAN — Orbital Radar (unchanged)
+// =====================================================
 (function() {
-  const setup = setupCanvas('c_clean', 320, 240);
+  const setup = initCanvas('c_scan');
   if (!setup) return;
-  const { c, ctx, w, h } = setup;
+  const { ctx, w, h, mouse } = setup;
   const cx = w/2, cy = h/2;
+  const nodes = [];
+  for (let i = 0; i < 14; i++) {
+    nodes.push({ angle: Math.random()*Math.PI*2, dist: 0.25+Math.random()*0.65, type: Math.random()>0.4?'safe':'threat', hitTime: -9999, size: 2+Math.random()*2.5 });
+  }
+
   function draw(t) {
     ctx.clearRect(0,0,w,h);
-    const cycle = (t % 4500) / 4500;
-    const bob = Math.sin(t * 0.002) * 2;
-    ctx.save(); ctx.translate(cx, cy + bob);
-    const bW=44,bH=50,bR=8,bX=-bW/2,bY=-bH/2+6;
-    ctx.save(); const sg=ctx.createRadialGradient(2,bH*0.55,6,2,bH*0.55,42); sg.addColorStop(0,'rgba(180,50,40,0.08)'); sg.addColorStop(1,'transparent'); ctx.fillStyle=sg; ctx.beginPath(); ctx.ellipse(2,bH*0.55,38,12,0,0,Math.PI*2); ctx.fill(); ctx.restore();
-    ctx.beginPath(); ctx.moveTo(bX,bY+8); ctx.lineTo(bX+4,bY+bH); ctx.lineTo(bX+8,bY+bH+2); ctx.lineTo(bX-2,bY+bH-2); ctx.closePath(); ctx.fillStyle='#8a2018'; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(bX+bW,bY+8); ctx.lineTo(bX+bW-4,bY+bH); ctx.lineTo(bX+bW-8,bY+bH+2); ctx.lineTo(bX+bW+2,bY+bH-2); ctx.closePath(); ctx.fillStyle='#9a2820'; ctx.fill();
-    const bodyG=ctx.createLinearGradient(bX,bY,bX+bW,bY+bH); bodyG.addColorStop(0,'#ef7b6b'); bodyG.addColorStop(0.15,'#EF5350'); bodyG.addColorStop(0.4,'#F44336'); bodyG.addColorStop(0.7,'#E53935'); bodyG.addColorStop(1,'#C62828');
-    ctx.beginPath(); ctx.moveTo(bX+3,bY+8); ctx.lineTo(bX+bW-3,bY+8); ctx.lineTo(bX+bW-6,bY+bH); ctx.quadraticCurveTo(bX+bW/2,bY+bH+3,bX+6,bY+bH); ctx.closePath(); ctx.fillStyle=bodyG; ctx.fill();
-    const specStG=ctx.createLinearGradient(bX,0,bX+bW,0); specStG.addColorStop(0,'rgba(255,255,255,0)'); specStG.addColorStop(0.3,'rgba(255,255,255,0.08)'); specStG.addColorStop(0.45,'rgba(255,255,255,0.22)'); specStG.addColorStop(0.55,'rgba(255,255,255,0.22)'); specStG.addColorStop(0.7,'rgba(255,255,255,0.08)'); specStG.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=specStG; ctx.fillRect(bX+3,bY+8,bW-6,bH-8);
-    ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.lineWidth=1; for(let i=1;i<4;i++){const lx=bX+3+(bW-6)*(i/4); ctx.beginPath(); ctx.moveTo(lx,bY+18); ctx.lineTo(lx-1,bY+bH-5); ctx.stroke();}
-    const fillH=cycle<0.1?0:cycle<0.45?((cycle-0.1)/0.35)*(bH-20):cycle<0.6?(bH-20):cycle<0.8?(1-(cycle-0.6)/0.2)*(bH-20):0;
-    if(fillH>0){ctx.save(); ctx.beginPath(); ctx.moveTo(bX+5,bY+10); ctx.lineTo(bX+bW-5,bY+10); ctx.lineTo(bX+bW-8,bY+bH-2); ctx.quadraticCurveTo(bX+bW/2,bY+bH+1,bX+8,bY+bH-2); ctx.closePath(); ctx.clip(); const fY=bY+bH-2-fillH; const mG=ctx.createLinearGradient(bX,fY,bX+bW,fY+fillH); mG.addColorStop(0,'rgba(210,215,232,0.55)'); mG.addColorStop(0.3,'rgba(235,238,248,0.4)'); mG.addColorStop(0.5,'rgba(220,225,240,0.5)'); mG.addColorStop(1,'rgba(195,200,218,0.3)'); ctx.fillStyle=mG; ctx.fillRect(bX+5,fY,bW-10,fillH+5); const surfG=ctx.createLinearGradient(bX+10,fY,bX+bW-10,fY); surfG.addColorStop(0,'rgba(255,255,255,0)'); surfG.addColorStop(0.35,'rgba(255,255,255,0.45)'); surfG.addColorStop(0.5,'rgba(255,255,255,0.55)'); surfG.addColorStop(0.65,'rgba(255,255,255,0.45)'); surfG.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=surfG; ctx.fillRect(bX+5,fY-1,bW-10,4); ctx.restore();}
-    const lidOpen=cycle>0.08&&cycle<0.65; const lidAngle=lidOpen?-0.5:0;
-    ctx.save(); ctx.translate(bX+bW/2,bY+5); ctx.rotate(lidAngle); const lidW=bW+10,lidH=8; const lidG=ctx.createLinearGradient(-lidW/2,-lidH/2,-lidW/2,lidH/2); lidG.addColorStop(0,'#f08878'); lidG.addColorStop(0.3,'#EF5350'); lidG.addColorStop(0.7,'#E53935'); lidG.addColorStop(1,'#C62828'); ctx.beginPath(); ctx.roundRect(-lidW/2,-lidH/2,lidW,lidH,3); ctx.fillStyle=lidG; ctx.fill(); ctx.beginPath(); ctx.roundRect(-lidW/2+3,-lidH/2+1,lidW-6,2.5,1); ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.fill(); ctx.beginPath(); ctx.roundRect(-9,-lidH/2-6,18,6,3); const knobG=ctx.createLinearGradient(0,-lidH/2-6,0,-lidH/2); knobG.addColorStop(0,'#E53935'); knobG.addColorStop(1,'#C62828'); ctx.fillStyle=knobG; ctx.fill(); ctx.beginPath(); ctx.roundRect(-6,-lidH/2-5,12,2,1); ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fill(); ctx.restore();
-    if(cycle>0.15&&cycle<0.55){const pp=(cycle-0.15)/0.4; const particles=[{c:'#4285F4',dx:-22,dy:-45,r:3.5},{c:'#FBBC04',dx:18,dy:-52,r:3},{c:'#34A853',dx:-6,dy:-42,r:4},{c:'#EA4335',dx:24,dy:-38,r:2.8},{c:'#9090a8',dx:-16,dy:-36,r:2.2},{c:'#4285F4',dx:11,dy:-55,r:2.2}]; particles.forEach((p,i)=>{const ease=1-Math.pow(1-pp,2.5); const px=p.dx*ease; const py=(bY-5)+p.dy*ease; const alpha=pp<0.65?0.85:(1-(pp-0.65)/0.35)*0.85; ctx.save(); ctx.translate(px,py); ctx.rotate(pp*Math.PI*3+i); ctx.globalAlpha=alpha; ctx.beginPath(); ctx.roundRect(-p.r,-p.r*0.7,p.r*2,p.r*1.4,p.r*0.3); ctx.fillStyle=p.c; ctx.fill(); ctx.beginPath(); ctx.ellipse(-p.r*0.2,-p.r*0.3,p.r*0.4,p.r*0.2,-0.3,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.fill(); ctx.globalAlpha=1; ctx.restore();});}
-    ctx.restore(); requestAnimationFrame(draw);
+    const m = mouse();
+    const px = (m.x-0.5)*8, py = (m.y-0.5)*6;
+    const R = Math.min(w,h)*0.34;
+    ctx.save(); ctx.translate(cx+px,cy+py);
+
+    for (let i=1;i<=4;i++){const r=R*(i/4);ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.strokeStyle=`rgba(66,133,244,${i===4?0.14:0.06})`;ctx.lineWidth=i===4?1.5:0.5;ctx.stroke();}
+    ctx.save();ctx.globalAlpha=0.04;ctx.strokeStyle='#4285F4';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(-R,0);ctx.lineTo(R,0);ctx.moveTo(0,-R);ctx.lineTo(0,R);ctx.stroke();ctx.restore();
+
+    const sa=(t*0.0012)%(Math.PI*2);
+    ctx.save();ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,sa-0.4,sa,false);ctx.closePath();
+    const beG=ctx.createRadialGradient(0,0,0,0,0,R);beG.addColorStop(0,'rgba(66,133,244,0.15)');beG.addColorStop(0.7,'rgba(66,133,244,0.06)');beG.addColorStop(1,'rgba(66,133,244,0)');
+    ctx.fillStyle=beG;ctx.fill();ctx.restore();
+
+    ctx.save();ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(sa)*R,Math.sin(sa)*R);
+    const lnG=ctx.createLinearGradient(0,0,Math.cos(sa)*R,Math.sin(sa)*R);lnG.addColorStop(0,'rgba(66,133,244,0.5)');lnG.addColorStop(0.5,'rgba(66,133,244,0.3)');lnG.addColorStop(1,'rgba(66,133,244,0)');
+    ctx.strokeStyle=lnG;ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
+
+    nodes.forEach(n=>{
+      const nx=Math.cos(n.angle)*n.dist*R,ny=Math.sin(n.angle)*n.dist*R;
+      let ad=sa-n.angle;while(ad<0)ad+=Math.PI*2;while(ad>Math.PI*2)ad-=Math.PI*2;
+      if(ad<0.1&&ad>=0)n.hitTime=t;
+      const tH=(t-n.hitTime)/1000,hG=Math.max(0,1-tH*0.8),bA=0.15+hG*0.85;
+      const col=n.type==='safe'?'#34A853':'#EA4335',sz=n.size*(1+hG*0.5);
+      ctx.save();ctx.globalAlpha=bA;
+      if(hG>0.1){ctx.beginPath();ctx.arc(nx,ny,sz*4*hG,0,Math.PI*2);const gG=ctx.createRadialGradient(nx,ny,0,nx,ny,sz*4*hG);gG.addColorStop(0,col);gG.addColorStop(1,'transparent');ctx.fillStyle=gG;ctx.globalAlpha=hG*0.25;ctx.fill();}
+      ctx.globalAlpha=bA;ctx.beginPath();ctx.arc(nx,ny,sz,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+      ctx.beginPath();ctx.arc(nx-sz*0.2,ny-sz*0.2,sz*0.4,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.4)';ctx.globalAlpha=bA*0.6;ctx.fill();
+      ctx.restore();
+    });
+
+    ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fillStyle='#4285F4';ctx.globalAlpha=0.6+Math.sin(t*0.003)*0.2;ctx.fill();
+    ctx.globalAlpha=1;ctx.beginPath();ctx.arc(0,0,14,0,Math.PI*2);
+    const cG=ctx.createRadialGradient(0,0,0,0,0,14);cG.addColorStop(0,'rgba(66,133,244,0.15)');cG.addColorStop(1,'transparent');ctx.fillStyle=cG;ctx.fill();
+
+    ctx.save();ctx.font='600 8px "Space Grotesk",monospace';ctx.fillStyle='rgba(66,133,244,0.25)';ctx.fillText('SCAN',-R+4,-R+12);
+    const sc2=nodes.filter(n=>n.type==='safe').length,tc=nodes.length-sc2;
+    ctx.fillStyle='rgba(52,168,83,0.3)';ctx.fillText(sc2+' SAFE',-R+4,R-6);
+    ctx.fillStyle='rgba(234,67,53,0.3)';ctx.fillText(tc+' FLAG',R-38,R-6);ctx.restore();
+
+    ctx.restore();
+    requestAnimationFrame(draw);
   }
   requestAnimationFrame(draw);
 })();
+
+
+// =====================================================
+// 3. CLEAN — Chain Link Break
+// Two interlocked chain links that pull apart,
+// snap with a flash + spark burst, then reassemble.
+// Represents severing the connection to spam senders.
+// =====================================================
+(function() {
+  const setup = initCanvas('c_clean');
+  if (!setup) return;
+  const { ctx, w, h, mouse } = setup;
+  const cx = w/2, cy = h/2;
+
+  const colors = ['#EA4335','#4285F4','#34A853','#FBBC04'];
+
+  // Scale factor based on canvas size
+  const S = Math.min(w, h) * 0.014; // base unit ~1.5-3px depending on canvas
+
+  // Spark particles (generated on break)
+  const sparks = [];
+  for (let i = 0; i < 30; i++) {
+    const angle = (Math.PI * 2 / 30) * i + (Math.random() - 0.5) * 0.5;
+    sparks.push({
+      angle,
+      speed: 1.5 + Math.random() * 3.5,
+      size: S * (0.8 + Math.random() * 1.8),
+      color: colors[i % colors.length],
+      life: 0.4 + Math.random() * 0.4,
+      rot: Math.random() * Math.PI * 2,
+      shape: Math.random() > 0.5 ? 'circle' : 'rect'
+    });
+  }
+
+  // Draw a single chain link (rounded rectangle outline)
+  function drawLink(ctx, x, y, w2, h2, r, rot, color, glow) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+
+    // Glow
+    if (glow > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(-w2/2, -h2/2, w2, h2, r);
+      ctx.shadowColor = color;
+      ctx.shadowBlur = S * 8 * glow;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = S * 2;
+      ctx.globalAlpha = glow * 0.3;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Main link body
+    ctx.beginPath();
+    ctx.roundRect(-w2/2, -h2/2, w2, h2, r);
+
+    // Metallic gradient
+    const grad = ctx.createLinearGradient(-w2/2, -h2/2, w2/2, h2/2);
+    grad.addColorStop(0, 'rgba(160,170,195,0.5)');
+    grad.addColorStop(0.3, 'rgba(220,225,240,0.7)');
+    grad.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+    grad.addColorStop(0.7, 'rgba(195,200,220,0.6)');
+    grad.addColorStop(1, 'rgba(140,150,175,0.45)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = S * 3.2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Inner highlight
+    ctx.beginPath();
+    ctx.roundRect(-w2/2 + S, -h2/2 + S, w2 - S*2, h2 * 0.4, [r - S*0.5, r - S*0.5, r * 2, r * 2]);
+    const hiG = ctx.createLinearGradient(0, -h2/2, 0, 0);
+    hiG.addColorStop(0, 'rgba(255,255,255,0.15)');
+    hiG.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hiG;
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  const cycleDuration = 5000;
+
+  function draw(t) {
+    ctx.clearRect(0, 0, w, h);
+    const m = mouse();
+    const px = (m.x - 0.5) * S * 6;
+    const py = (m.y - 0.5) * S * 4;
+    const cycle = (t % cycleDuration) / cycleDuration;
+
+    // Link dimensions — scaled to canvas
+    const linkW = S * 22;
+    const linkH = S * 13;
+    const linkR = S * 6.5;
+
+    ctx.save();
+    ctx.translate(cx + px, cy + py);
+
+    // Calculate separation
+    let sep = 0;
+    let tension = 0;
+    let breakFlash = 0;
+    let sparkProgress = -1;
+    let linkGlow = 0;
+
+    if (cycle < 0.25) {
+      sep = 0;
+      tension = 0;
+    } else if (cycle < 0.4) {
+      const p = (cycle - 0.25) / 0.15;
+      sep = ease(p) * S * 6;
+      tension = ease(p);
+      linkGlow = tension * 0.6;
+    } else if (cycle < 0.45) {
+      const p = (cycle - 0.4) / 0.05;
+      sep = S * 6 + ease(p) * S * 25;
+      breakFlash = 1 - p;
+      sparkProgress = p;
+      linkGlow = (1 - p) * 0.8;
+    } else if (cycle < 0.7) {
+      const p = (cycle - 0.45) / 0.25;
+      sep = S * 31 + p * S * 10;
+      sparkProgress = 0.2 + p * 0.8;
+    } else if (cycle < 0.85) {
+      const p = (cycle - 0.7) / 0.15;
+      sep = S * 41 * (1 - ease(p));
+    } else {
+      const p = (cycle - 0.85) / 0.15;
+      sep = Math.sin(p * Math.PI * 2) * (1 - p) * S * 2;
+    }
+
+    const tiltL = tension * 0.1 + (sep > S * 14 ? 0.06 : 0);
+    const tiltR = -tension * 0.1 - (sep > S * 14 ? 0.06 : 0);
+    const bob = Math.sin(t * 0.002) * S * 1.2;
+
+    // === Break flash ===
+    if (breakFlash > 0) {
+      ctx.save();
+      const flashR = S * 35 * breakFlash;
+      ctx.beginPath();
+      ctx.arc(0, 0, flashR, 0, Math.PI * 2);
+      const fG = ctx.createRadialGradient(0, 0, 0, 0, 0, flashR);
+      fG.addColorStop(0, 'rgba(255,255,255,' + (breakFlash * 0.6) + ')');
+      fG.addColorStop(0.3, 'rgba(66,133,244,' + (breakFlash * 0.2) + ')');
+      fG.addColorStop(1, 'transparent');
+      ctx.fillStyle = fG;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // === Left link ===
+    const leftX = -sep / 2 - linkW * 0.2;
+    drawLink(ctx, leftX, bob, linkW, linkH, linkR, tiltL, '#4285F4', linkGlow);
+
+    // === Right link ===
+    const rightX = sep / 2 + linkW * 0.2;
+    drawLink(ctx, rightX, bob, linkW, linkH, linkR, tiltR, '#EA4335', linkGlow);
+
+    // === Interlock visual ===
+    if (sep < S * 10) {
+      const overlapAlpha = Math.max(0, 1 - sep / (S * 10)) * 0.15;
+      ctx.save();
+      ctx.globalAlpha = overlapAlpha;
+      ctx.beginPath();
+      ctx.ellipse(0, bob, S * 5, S * 7, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(200,205,220,0.3)';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // === Tension lines ===
+    if (tension > 0.1 && sep < S * 14) {
+      ctx.save();
+      ctx.globalAlpha = tension * 0.3;
+      for (let i = 0; i < 3; i++) {
+        const ly = bob - S * 2 + i * S * 2;
+        ctx.beginPath();
+        ctx.moveTo(leftX + linkW/2, ly);
+        ctx.lineTo(rightX - linkW/2, ly);
+        ctx.strokeStyle = 'rgba(234,67,53,' + (0.3 + tension * 0.4) + ')';
+        ctx.lineWidth = S * 0.35;
+        ctx.setLineDash([S, S]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.restore();
+    }
+
+    // === Sparks ===
+    if (sparkProgress >= 0 && sparkProgress < 1) {
+      sparks.forEach(sp => {
+        const p = Math.min(1, sparkProgress / sp.life);
+        if (p >= 1) return;
+        const dist = sp.speed * S * 14 * ease(p);
+        const sx = Math.cos(sp.angle) * dist;
+        const sy = Math.sin(sp.angle) * dist - p * S * 5;
+        const alpha = (1 - p) * 0.85;
+        const sz = sp.size * (1 - p * 0.5);
+
+        ctx.save();
+        ctx.translate(sx, sy + bob);
+        ctx.rotate(sp.rot + p * 4);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = sp.color;
+
+        if (sp.shape === 'circle') {
+          ctx.beginPath();
+          ctx.arc(0, 0, sz, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.roundRect(-sz, -sz * 0.7, sz * 2, sz * 1.4, sz * 0.2);
+          ctx.fill();
+        }
+
+        if (sz > S * 0.8) {
+          ctx.beginPath();
+          ctx.arc(-sz * 0.2, -sz * 0.2, sz * 0.25, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+          ctx.fill();
+        }
+
+        ctx.restore();
+      });
+    }
+
+    // === "Unsubscribed" text ===
+    if (cycle > 0.48 && cycle < 0.68) {
+      const tp = Math.min(1, (cycle - 0.48) / 0.06);
+      const tFade = cycle > 0.62 ? (0.68 - cycle) / 0.06 : 1;
+      ctx.save();
+      ctx.globalAlpha = tp * tFade * 0.45;
+      ctx.font = '600 ' + Math.round(S * 5.5) + 'px "Space Grotesk", monospace';
+      ctx.fillStyle = '#34A853';
+      ctx.textAlign = 'center';
+      ctx.fillText('UNSUBSCRIBED', 0, bob + S * 22);
+      ctx.textAlign = 'start';
+      ctx.restore();
+    }
+
+    // === Checkmark ===
+    if (cycle > 0.5 && cycle < 0.65) {
+      const cp = Math.min(1, (cycle - 0.5) / 0.05);
+      const cFade = cycle > 0.6 ? (0.65 - cycle) / 0.05 : 1;
+      ctx.save();
+      ctx.globalAlpha = ease(cp) * cFade * 0.6;
+      ctx.translate(0, bob - S * 18);
+      const cs = 0.5 + ease(cp) * 0.5;
+      ctx.scale(cs, cs);
+
+      const cr = S * 5.5;
+      ctx.beginPath(); ctx.arc(0, 0, cr, 0, Math.PI * 2);
+      ctx.fillStyle = '#34A853'; ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(-cr * 0.35, cr * 0.06);
+      ctx.lineTo(-cr * 0.08, cr * 0.32);
+      ctx.lineTo(cr * 0.4, -cr * 0.25);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = S * 1.3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+
+      ctx.restore();
+    }
+
+    ctx.restore();
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+
+// Resize
+window.addEventListener('resize', () => {
+  ['c_install','c_scan','c_clean'].forEach(id => {
+    const c = document.getElementById(id); if(!c)return;
+    const rect = c.parentElement.getBoundingClientRect();
+    c.width=rect.width*DPR; c.height=rect.height*DPR;
+    c.style.width=rect.width+'px'; c.style.height=rect.height+'px';
+    const ctx2=c.getContext('2d'); ctx2.setTransform(1,0,0,1,0,0); ctx2.scale(DPR,DPR);
+  });
+});
 </script>
   <script>
 window.addEventListener('load',function(){

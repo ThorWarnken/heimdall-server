@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Heimdall — Guard Your Inbox</title>
 <style>
-  /* ── Preloader ── */
-.preloader{position:fixed;inset:0;z-index:99999;background:#0a0a0c;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease,visibility .8s ease}
-.preloader.done{opacity:0;visibility:hidden;pointer-events:none}
+/* ── Preloader ── */
+.preloader{position:fixed;inset:0;z-index:99999;background:#0a0a0c;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 1.2s cubic-bezier(.4,0,.2,1)}
+.preloader.done{opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.05)}
 .preloader-shield{position:relative;width:220px;height:220px;display:flex;align-items:center;justify-content:center}
 .preloader-logo{width:110px;height:110px;border-radius:22px;object-fit:cover;animation:preloader-enter 1s ease-out both;filter:drop-shadow(0 0 30px rgba(200,200,208,0.3));border:2px solid rgba(200,200,208,0.4);z-index:2;position:relative}
 .preloader-ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;animation:preloader-spin 1.4s linear infinite}
@@ -19,6 +19,17 @@
 .preloader-ring:nth-child(3)::after{bottom:-3px;right:20%;background:rgba(200,200,208,0.4)}
 .preloader-ring:nth-child(4)::after{top:20%;left:-3px;background:rgba(200,200,208,0.2)}
 .preloader-glow{position:absolute;inset:-40px;border-radius:50%;background:radial-gradient(circle,rgba(200,200,208,0.06) 0%,transparent 70%);animation:preloader-pulse 2.5s ease-in-out infinite}
+.preloader-scanlines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(200,200,208,0.02) 2px,rgba(200,200,208,0.02) 4px);pointer-events:none;animation:preloader-scanfade 3s ease-in-out infinite}
+.preloader-particles{position:absolute;inset:0;overflow:hidden}
+.preloader-particle{position:absolute;width:2px;height:2px;background:rgba(200,200,208,0.4);border-radius:50%;animation:preloader-float 4s ease-in-out infinite}
+.preloader-particle:nth-child(1){top:15%;left:10%;animation-delay:0s;animation-duration:3.5s}
+.preloader-particle:nth-child(2){top:80%;left:25%;animation-delay:.5s;animation-duration:4.2s}
+.preloader-particle:nth-child(3){top:30%;right:15%;animation-delay:1s;animation-duration:3.8s}
+.preloader-particle:nth-child(4){bottom:20%;right:30%;animation-delay:1.5s;animation-duration:4.5s}
+.preloader-particle:nth-child(5){top:50%;left:5%;animation-delay:.8s;animation-duration:3.2s}
+.preloader-particle:nth-child(6){top:10%;right:10%;animation-delay:2s;animation-duration:4s}
+.preloader-particle:nth-child(7){bottom:10%;left:40%;animation-delay:.3s;animation-duration:3.6s}
+.preloader-particle:nth-child(8){top:60%;right:5%;animation-delay:1.2s;animation-duration:4.8s}
 .preloader-bars{display:flex;gap:4px;margin-top:2.5rem;align-items:end}
 .preloader-bar{width:3px;background:rgba(200,200,208,0.5);border-radius:2px;animation:preloader-wave 1.2s ease-in-out infinite}
 .preloader-bar:nth-child(1){height:12px;animation-delay:0s}
@@ -26,12 +37,12 @@
 .preloader-bar:nth-child(3){height:28px;animation-delay:.2s}
 .preloader-bar:nth-child(4){height:20px;animation-delay:.3s}
 .preloader-bar:nth-child(5){height:12px;animation-delay:.4s}
-.preloader-text{margin-top:1.2rem;font-family:'Space Grotesk',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:rgba(200,200,208,0.5);animation:preloader-fade 1.5s ease-in-out infinite alternate}
 @keyframes preloader-spin{to{transform:rotate(360deg)}}
 @keyframes preloader-enter{0%{opacity:0;transform:scale(.4) rotate(-20deg);filter:drop-shadow(0 0 0 transparent)}60%{transform:scale(1.08) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 30px rgba(200,200,208,0.3))}}
 @keyframes preloader-pulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.2);opacity:1}}
-@keyframes preloader-fade{0%{opacity:.2}100%{opacity:.7}}
 @keyframes preloader-wave{0%,100%{transform:scaleY(1);opacity:.3}50%{transform:scaleY(1.8);opacity:1}}
+@keyframes preloader-float{0%,100%{transform:translateY(0) scale(1);opacity:.2}50%{transform:translateY(-30px) scale(1.5);opacity:.6}}
+@keyframes preloader-scanfade{0%,100%{opacity:.3}50%{opacity:.8}}
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#fafaf8;--bg2:#f2f2ee;--ink:#0a0a0c;--ink2:#3a3a42;--ink3:#6a6a78;--ink4:#9a9aaa;--dim:#c8c8d0;--faint:#e8e8e6;--chrome:#8a8a9c;--chrome-hi:#b0b0c0}
@@ -224,7 +235,18 @@ footer .fc2{font-size:.7rem;color:rgba(200,200,210,0.4)}.flinks{display:flex;gap
 </style>
 </head>
 <body>
- <div class="preloader" id="preloader">
+<div class="preloader" id="preloader">
+  <div class="preloader-scanlines"></div>
+  <div class="preloader-particles">
+    <div class="preloader-particle"></div>
+    <div class="preloader-particle"></div>
+    <div class="preloader-particle"></div>
+    <div class="preloader-particle"></div>
+    <div class="preloader-particle"></div>
+    <div class="preloader-particle"></div>
+    <div class="preloader-particle"></div>
+    <div class="preloader-particle"></div>
+  </div>
   <div class="preloader-shield">
     <div class="preloader-glow"></div>
     <div class="preloader-ring"></div>
@@ -240,7 +262,6 @@ footer .fc2{font-size:.7rem;color:rgba(200,200,210,0.4)}.flinks{display:flex;gap
     <div class="preloader-bar"></div>
     <div class="preloader-bar"></div>
   </div>
-  <div class="preloader-text">Initializing shield</div>
 </div>
 
 
@@ -919,7 +940,7 @@ function setupCanvas(id, w, h) {
 window.addEventListener('load',function(){
   setTimeout(function(){
     document.getElementById('preloader').classList.add('done');
-  },1200);
+  },3500);
 });
 </script>
 </body>

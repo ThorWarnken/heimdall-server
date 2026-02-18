@@ -5,18 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Heimdall — Guard Your Inbox</title>
 <style>
-   /* ── Preloader ── */
-.preloader{position:fixed;inset:0;z-index:99999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
+  /* ── Preloader ── */
+.preloader{position:fixed;inset:0;z-index:99999;background:#0a0a0c;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s ease,visibility .8s ease}
 .preloader.done{opacity:0;visibility:hidden;pointer-events:none}
-.preloader-logo{width:72px;height:72px;border-radius:16px;border:2px solid rgba(10,10,12,0.8);object-fit:cover;animation:preloader-breathe 2s ease-in-out infinite,preloader-enter .8s ease-out both}
-.preloader-shield{position:relative;width:100px;height:100px;display:flex;align-items:center;justify-content:center}
-.preloader-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid transparent;border-top-color:var(--ink);animation:preloader-spin 1.2s linear infinite}
-.preloader-ring:nth-child(2){inset:6px;border-top-color:transparent;border-right-color:var(--chrome);animation-duration:1.8s;animation-direction:reverse}
-.preloader-text{margin-top:1.8rem;font-family:'Space Grotesk',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--ink4);animation:preloader-fade 1.5s ease-in-out infinite alternate}
-@keyframes preloader-breathe{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(10,10,12,0.05)}50%{transform:scale(1.04);box-shadow:0 8px 30px rgba(10,10,12,0.1)}}
+.preloader-shield{position:relative;width:220px;height:220px;display:flex;align-items:center;justify-content:center}
+.preloader-logo{width:110px;height:110px;border-radius:22px;object-fit:cover;animation:preloader-enter 1s ease-out both;filter:drop-shadow(0 0 30px rgba(200,200,208,0.3));border:2px solid rgba(200,200,208,0.4);z-index:2;position:relative}
+.preloader-ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;animation:preloader-spin 1.4s linear infinite}
+.preloader-ring:nth-child(2){border-top-color:rgba(200,200,208,0.6);filter:drop-shadow(0 0 8px rgba(200,200,208,0.3))}
+.preloader-ring:nth-child(3){inset:12px;border-right-color:rgba(200,200,208,0.3);animation-duration:2s;animation-direction:reverse}
+.preloader-ring:nth-child(4){inset:24px;border-bottom-color:rgba(200,200,208,0.15);animation-duration:3s}
+.preloader-ring::after{content:'';position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(200,200,208,0.8);box-shadow:0 0 10px rgba(200,200,208,0.5)}
+.preloader-ring:nth-child(2)::after{top:-3px;left:50%}
+.preloader-ring:nth-child(3)::after{bottom:-3px;right:20%;background:rgba(200,200,208,0.4)}
+.preloader-ring:nth-child(4)::after{top:20%;left:-3px;background:rgba(200,200,208,0.2)}
+.preloader-glow{position:absolute;inset:-40px;border-radius:50%;background:radial-gradient(circle,rgba(200,200,208,0.06) 0%,transparent 70%);animation:preloader-pulse 2.5s ease-in-out infinite}
+.preloader-bars{display:flex;gap:4px;margin-top:2.5rem;align-items:end}
+.preloader-bar{width:3px;background:rgba(200,200,208,0.5);border-radius:2px;animation:preloader-wave 1.2s ease-in-out infinite}
+.preloader-bar:nth-child(1){height:12px;animation-delay:0s}
+.preloader-bar:nth-child(2){height:20px;animation-delay:.1s}
+.preloader-bar:nth-child(3){height:28px;animation-delay:.2s}
+.preloader-bar:nth-child(4){height:20px;animation-delay:.3s}
+.preloader-bar:nth-child(5){height:12px;animation-delay:.4s}
+.preloader-text{margin-top:1.2rem;font-family:'Space Grotesk',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:rgba(200,200,208,0.5);animation:preloader-fade 1.5s ease-in-out infinite alternate}
 @keyframes preloader-spin{to{transform:rotate(360deg)}}
-@keyframes preloader-fade{0%{opacity:.3}100%{opacity:1}}
-@keyframes preloader-enter{0%{opacity:0;transform:scale(.7)}100%{opacity:1;transform:scale(1)}}
+@keyframes preloader-enter{0%{opacity:0;transform:scale(.4) rotate(-20deg);filter:drop-shadow(0 0 0 transparent)}60%{transform:scale(1.08) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 30px rgba(200,200,208,0.3))}}
+@keyframes preloader-pulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.2);opacity:1}}
+@keyframes preloader-fade{0%{opacity:.2}100%{opacity:.7}}
+@keyframes preloader-wave{0%,100%{transform:scaleY(1);opacity:.3}50%{transform:scaleY(1.8);opacity:1}}
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#fafaf8;--bg2:#f2f2ee;--ink:#0a0a0c;--ink2:#3a3a42;--ink3:#6a6a78;--ink4:#9a9aaa;--dim:#c8c8d0;--faint:#e8e8e6;--chrome:#8a8a9c;--chrome-hi:#b0b0c0}
@@ -209,13 +224,23 @@ footer .fc2{font-size:.7rem;color:rgba(200,200,210,0.4)}.flinks{display:flex;gap
 </style>
 </head>
 <body>
-  <div class="preloader" id="preloader">
+ <div class="preloader" id="preloader">
   <div class="preloader-shield">
+    <div class="preloader-glow"></div>
+    <div class="preloader-ring"></div>
+    <div class="preloader-ring"></div>
     <div class="preloader-ring"></div>
     <div class="preloader-ring"></div>
     <img src="helmet-logo.png" alt="Heimdall" class="preloader-logo">
   </div>
-  <div class="preloader-text">Defending your inbox</div>
+  <div class="preloader-bars">
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+    <div class="preloader-bar"></div>
+  </div>
+  <div class="preloader-text">Initializing shield</div>
 </div>
 
 

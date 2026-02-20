@@ -352,9 +352,10 @@ footer .fc2{font-size:.7rem;color:rgba(200,200,210,0.4)}.flinks{display:flex;gap
 </div></section>
 
 <section class="price-band" id="pricing"><div class="price-inner">
-<div class="dark-rv"><h2 class="sg">Simple pricing.</h2><p>One plan. No tiers. No enterprise upsell. Start free, then less than a coffee per month.</p></div>
+<div class="dark-rv"><h2 class="sg">Simple pricing.</h2><p>Two plans. No tiers. No enterprise upsell. Start free, then less than a coffee per month.</p></div>
 <div class="pcard dark-rv dark-rvd1">
-<div class="p-amt"><span class="p-d">$</span><span class="p-v sg">2.99</span><span class="p-per">/mo</span></div>
+  
+<div class="p-amt"><span class="p-d">$</span><span class="p-v sg">19.99</span><span class="p-per">/yr</span></div><span id="save-tag" style="background:#00d4ff;color:#000;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:bold;margin-left:8px">SAVE 44%</span>
 <div class="p-trial">&#8594; Starts with 7 days free</div>
 <ul class="p-list"><li>Unlimited inbox scans</li><li>One-click unsubscribe</li><li>Real-time detection</li><li>Priority support</li><li>Cancel anytime</li></ul>
 <a href="https://chromewebstore.google.com/detail/heimdall/kdklpoodjbgjgjpcfeafabpfdhjlhdcb" target="_blank" class="btn-c p-cta">Start free trial</a><p class="p-note">7-day free trial · Cancel anytime</p>
@@ -485,7 +486,7 @@ const origRunDemo = runDemo;
   const pObs = new IntersectionObserver(entries => {
     if (entries[0].isIntersecting && !animated) {
       animated = true;
-      const target = 2.99;
+      const target = 19.99;
       const duration = 1200;
       const start = performance.now();
       function tick(now) {

@@ -725,254 +725,119 @@ document.querySelectorAll('.btn-c, .btn-o, .nav-r a').forEach(el => {
 });
 
 // =========================================================================
-// MERCURY: Thick liquid chrome ribbons floating through space
-// Rendered as filled shapes with metallic banding, not stroked lines
+// MERCURY: Flowing liquid silver — WebGL domain-warped FBM shader
 // =========================================================================
 (function() {
-  const canvas = document.getElementById('mercuryCanvas');
-  const ctx = canvas.getContext('2d');
-  let W, H, DPR;
+  var canvas = document.getElementById('mercuryCanvas');
+  if (!canvas) return;
 
+  var gl = null;
+  var ctxNames = ['webgl2','webgl','experimental-webgl'];
+  for (var ci = 0; ci < ctxNames.length; ci++) {
+    try { gl = canvas.getContext(ctxNames[ci], { alpha:true, premultipliedAlpha:false, antialias:false }); if (gl) break; } catch(e) {}
+  }
+  if (!gl) return;
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
   function resize() {
-    DPR = window.devicePixelRatio || 1;
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = W * DPR;
-    canvas.height = H * DPR;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    canvas.width  = Math.round(window.innerWidth  * dpr);
+    canvas.height = Math.round(window.innerHeight * dpr);
+    gl.viewport(0, 0, canvas.width, canvas.height);
   }
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', resize, {passive:true});
 
-  let scrollY = 0;
-  window.addEventListener('scroll', () => { scrollY = window.scrollY; });
+  var VERT = [
+    'precision highp float;',
+    'attribute vec2 aPos;',
+    'void main(){gl_Position=vec4(aPos,0.0,1.0);}'
+  ].join('\n');
 
-  // Each stream is a zero-gravity liquid form with organic width variation
-  // ========== LIQUID CHROME RENDERER ==========
+  var FRAG = [
+    'precision highp float;',
+    'uniform vec2  uRes;',
+    'uniform float uTime;',
+    'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+    'float vn(vec2 p){',
+    '  vec2 i=floor(p),f=fract(p),u=f*f*(3.0-2.0*f);',
+    '  return mix(mix(h(i),h(i+vec2(1.0,0.0)),u.x),mix(h(i+vec2(0.0,1.0)),h(i+vec2(1.0,1.0)),u.x),u.y);',
+    '}',
+    'float fbm(vec2 p){',
+    '  float v=0.0,a=0.5;',
+    '  for(int i=0;i<5;i++){v+=a*vn(p);p=p*2.0+vec2(1.3,0.7);a*=0.5;}',
+    '  return v;',
+    '}',
+    'void main(){',
+    '  vec2 fc=gl_FragCoord.xy;',
+    '  float mn=min(uRes.x,uRes.y);',
+    '  vec2 uv=(fc-0.5*uRes)/mn;',
+    '  float t=uTime*0.065;',
+    '  vec2 p=uv*1.7;',
+    '  vec2 q=vec2(fbm(p+vec2(0.0,0.0)+t),fbm(p+vec2(3.2,1.7)+t*0.8));',
+    '  vec2 r=vec2(fbm(p+2.0*q+vec2(1.7,9.2)+t*0.6),fbm(p+2.0*q+vec2(8.3,2.8)+t*0.5));',
+    '  float f=fbm(p+3.0*r+t*0.3);',
+    '  f=clamp(f*1.6-0.25,0.0,1.0);',
+    '  vec3 shadow=vec3(0.07,0.08,0.11);',
+    '  vec3 steel =vec3(0.24,0.26,0.32);',
+    '  vec3 silver=vec3(0.58,0.60,0.66);',
+    '  vec3 chrome=vec3(0.84,0.86,0.92);',
+    '  vec3 spk   =vec3(0.97,0.98,1.00);',
+    '  vec3 col=shadow;',
+    '  col=mix(col,steel, smoothstep(0.0, 0.30,f));',
+    '  col=mix(col,silver,smoothstep(0.30,0.58,f));',
+    '  col=mix(col,chrome,smoothstep(0.58,0.80,f));',
+    '  col=mix(col,spk,   smoothstep(0.80,1.0, f));',
+    '  col+=spk*pow(max(0.0,f-0.82)*5.5,2.5)*0.5;',
+    '  float alpha=smoothstep(0.18,0.48,f)*0.90;',
+    '  alpha*=1.0-smoothstep(0.35,1.25,length(uv)*0.85);',
+    '  alpha*=mix(0.12,1.0,smoothstep(-0.95,0.45,uv.y));',
+    '  gl_FragColor=vec4(col,alpha);',
+    '}'
+  ].join('\n');
 
-  function makeStream(x0, y0, angle, len, baseWidth, waveMag, waveFreq, phaseOff) {
-    var N = 55;
-    var spine = [];
-    var seed = phaseOff * 137.5;
-    for (var i = 0; i <= N; i++) {
-      var t = i / N;
-      var bx = x0 + Math.cos(angle) * len * t;
-      var by = y0 + Math.sin(angle) * len * t;
-      var perpA = angle + Math.PI / 2;
-      var wave = Math.sin(t * Math.PI * waveFreq + phaseOff) * waveMag
-              + Math.sin(t * Math.PI * waveFreq * 1.6 + phaseOff + 1) * waveMag * 0.25
-              + Math.cos(t * Math.PI * waveFreq * 0.5 + phaseOff * 0.7) * waveMag * 0.12;
-      var taper = Math.pow(Math.sin(t * Math.PI), 0.3);
-      var bulge = 0.5 * Math.pow(Math.max(0, Math.sin(t * Math.PI * 2.5 + seed)), 2);
-      var pinch = 0.25 * Math.pow(Math.max(0, -Math.sin(t * Math.PI * 3 + seed * 0.8)), 2.5);
-      var w = baseWidth * Math.max(0.12, taper * (0.4 + bulge - pinch) + 0.1);
-      spine.push({ x: bx + Math.cos(perpA) * wave, y: by + Math.sin(perpA) * wave, w: w, t: t, perpA: perpA, phase: phaseOff });
-    }
-    return spine;
+  function mkShader(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(s)); return null; }
+    return s;
   }
+  var vs = mkShader(gl.VERTEX_SHADER, VERT);
+  var fs = mkShader(gl.FRAGMENT_SHADER, FRAG);
+  if (!vs || !fs) return;
+  var prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(prog)); return; }
 
-  var streamDefs = [
-    { x:-W*0.08, y:H*0.03, angle:0.22, len:W*0.85, width:W>900?90:60, waveMag:W>900?100:55, waveFreq:1.5, phase:0, parallax:0.04 },
-    { x:-W*0.04, y:H*0.35, angle:0.08, len:W*0.75, width:W>900?68:45, waveMag:W>900?75:42, waveFreq:1.8, phase:2.1, parallax:0.05 },
-    { x:W*0.12, y:H*0.62, angle:-0.18, len:W*0.7, width:W>900?52:35, waveMag:W>900?62:38, waveFreq:2.1, phase:4.3, parallax:0.065 },
-    { x:-W*0.02, y:H*0.2, angle:0.15, len:W*0.6, width:W>900?28:18, waveMag:W>900?48:28, waveFreq:2.5, phase:1.5, parallax:0.045 },
-    { x:W*0.08, y:H*0.5, angle:0.03, len:W*0.55, width:W>900?20:14, waveMag:W>900?38:22, waveFreq:2.8, phase:3.7, parallax:0.058 },
-    { x:-W*0.12, y:H*0.7, angle:0.25, len:W*0.5, width:W>900?15:10, waveMag:W>900?32:18, waveFreq:3.2, phase:5.5, parallax:0.072 },
-  ];
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,1,-1,-1,1,1,1,-1]), gl.STATIC_DRAW);
+  var aPos  = gl.getAttribLocation(prog,  'aPos');
+  var uRes  = gl.getUniformLocation(prog, 'uRes');
+  var uTime = gl.getUniformLocation(prog, 'uTime');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-  var streams = streamDefs.map(function(d) {
-    return Object.assign({}, d, { spine: makeStream(d.x, d.y, d.angle, d.len, d.width, d.waveMag, d.waveFreq, d.phase) });
-  });
+  var scrollY = 0;
+  window.addEventListener('scroll', function(){ scrollY = window.scrollY; }, {passive:true});
 
-  var sparkles = [];
-  streams.forEach(function(s, si) {
-    var count = si < 3 ? 8 + Math.floor(Math.random()*5) : 2;
-    for (var i = 0; i < count; i++) {
-      sparkles.push({ si:si, idx:Math.floor(Math.random()*s.spine.length), off:(Math.random()-0.5)*0.5, phase:Math.random()*6.28, speed:0.002+Math.random()*0.003, size:1+Math.random()*2 });
-    }
-  });
-
-  var beads = [];
-  streams.forEach(function(s, si) {
-    if (si > 3) return;
-    for (var i = 0; i < 2; i++) {
-      var idx = Math.floor(s.spine.length * (0.2+Math.random()*0.6));
-      var pt = s.spine[idx]; var side = Math.random()>0.5?1:-1;
-      beads.push({ si:si, idx:idx, ox:Math.cos(pt.perpA+side*Math.PI/2)*pt.w*0.6, oy:Math.sin(pt.perpA+side*Math.PI/2)*pt.w*0.6, r:1.5+Math.random()*2.5, phase:Math.random()*6.28, speed:0.0007+Math.random()*0.0005 });
-    }
-  });
-
-  function drawStream(stream, time) {
-    var spine = stream.spine;
-    var pxY = scrollY * stream.parallax;
-
-    var anim = spine.map(function(pt, i) {
-      var wv = Math.sin(time*0.00045 + pt.phase + i*0.1) * 8;
-      var wv2 = Math.cos(time*0.00035 + pt.phase*1.3 + i*0.07) * 5;
-      var wS = Math.sin(time*0.00025 + i*0.12 + stream.phase) * 6;
-      return { x:pt.x+Math.cos(pt.perpA)*wv, y:pt.y+Math.sin(pt.perpA)*wv+wv2-pxY, w:Math.max(3,pt.w+wS+Math.sin(time*0.0006+i*0.2)*3), perpA:pt.perpA, t:pt.t };
-    });
-
-    var n = anim.length;
-    var topE = [], botE = [];
-    for (var i = 0; i < n; i++) {
-      var p = anim[i], hw = p.w*0.5;
-      var wT = Math.sin(time*0.0005+i*0.18)*2, wB = Math.cos(time*0.00045+i*0.15)*2;
-      topE.push({ x:p.x+Math.cos(p.perpA-Math.PI/2)*(hw+wT), y:p.y+Math.sin(p.perpA-Math.PI/2)*(hw+wT) });
-      botE.push({ x:p.x+Math.cos(p.perpA+Math.PI/2)*(hw+wB), y:p.y+Math.sin(p.perpA+Math.PI/2)*(hw+wB) });
-    }
-
-    function sc(pts) {
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (var i=1; i<pts.length-1; i++) { var mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2; ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my); }
-      ctx.lineTo(pts[pts.length-1].x, pts[pts.length-1].y);
-    }
-    function shape() { sc(topE); var rb=botE.slice().reverse(); ctx.lineTo(rb[0].x,rb[0].y); sc(rb); ctx.closePath(); }
-    function offE(edge, frac, dir) {
-      return edge.map(function(p,i) { var sp=anim[i]; if(!sp)return p; return { x:p.x+Math.cos(sp.perpA+dir)*frac*sp.w, y:p.y+Math.sin(sp.perpA+dir)*frac*sp.w }; });
-    }
-
-    var mi = anim[Math.floor(n/2)];
-    var s0 = anim[0], sL = anim[n-1];
-    var gx1=mi.x+Math.cos(mi.perpA-Math.PI/2)*mi.w*0.7, gy1=mi.y+Math.sin(mi.perpA-Math.PI/2)*mi.w*0.7;
-    var gx2=mi.x+Math.cos(mi.perpA+Math.PI/2)*mi.w*0.7, gy2=mi.y+Math.sin(mi.perpA+Math.PI/2)*mi.w*0.7;
-
-    // L0: Drop shadow
-    ctx.save(); ctx.translate(5,8); ctx.beginPath(); shape();
-    ctx.fillStyle='rgba(140,148,170,0.15)'; ctx.filter='blur(14px)'; ctx.fill(); ctx.restore();
-
-    // L1: OPAQUE chrome body — lighter true chrome/silver
-    ctx.save(); ctx.beginPath(); shape();
-    var bg = ctx.createLinearGradient(gx1,gy1,gx2,gy2);
-    bg.addColorStop(0,    'rgb(165,172,190)');
-    bg.addColorStop(0.05, 'rgb(185,192,210)');
-    bg.addColorStop(0.12, 'rgb(210,216,230)');
-    bg.addColorStop(0.22, 'rgb(235,238,248)');
-    bg.addColorStop(0.30, 'rgb(252,253,255)');  // peak white
-    bg.addColorStop(0.38, 'rgb(235,240,250)');
-    bg.addColorStop(0.48, 'rgb(200,208,225)');
-    bg.addColorStop(0.56, 'rgb(170,178,198)');  // soft crease
-    bg.addColorStop(0.64, 'rgb(192,200,218)');
-    bg.addColorStop(0.74, 'rgb(225,230,242)');
-    bg.addColorStop(0.82, 'rgb(248,250,255)');  // 2nd highlight
-    bg.addColorStop(0.90, 'rgb(210,218,235)');
-    bg.addColorStop(1,    'rgb(158,165,185)');
-    ctx.fillStyle = bg; ctx.fill(); ctx.restore();
-
-    // L2: Longitudinal environment reflections
-    ctx.save(); ctx.beginPath(); shape(); ctx.clip();
-    var eG = ctx.createLinearGradient(s0.x,s0.y,sL.x,sL.y);
-    eG.addColorStop(0,   'rgba(140,148,175,0.10)');
-    eG.addColorStop(0.12,'rgba(255,255,255,0.12)');
-    eG.addColorStop(0.28,'rgba(140,148,175,0.12)');
-    eG.addColorStop(0.42,'rgba(255,255,255,0.10)');
-    eG.addColorStop(0.58,'rgba(140,148,175,0.14)');
-    eG.addColorStop(0.72,'rgba(255,255,255,0.14)');
-    eG.addColorStop(0.88,'rgba(140,148,175,0.10)');
-    eG.addColorStop(1,   'rgba(255,255,255,0.08)');
-    ctx.fillStyle = eG;
-    ctx.fillRect(Math.min(s0.x,sL.x)-200, Math.min(s0.y,sL.y)-200, Math.abs(sL.x-s0.x)+400, Math.abs(sL.y-s0.y)+400);
-    ctx.restore();
-
-    // L3: Bright specular band (top)
-    ctx.save();
-    var sb = offE(topE, 0.3, Math.PI/2);
-    ctx.beginPath(); sc(topE); var rsb=sb.slice().reverse(); ctx.lineTo(rsb[0].x,rsb[0].y); sc(rsb); ctx.closePath();
-    var sG = ctx.createLinearGradient(gx1,gy1,gx2,gy2);
-    sG.addColorStop(0,'rgba(255,255,255,0)');
-    sG.addColorStop(0.12,'rgba(255,255,255,0.55)');
-    sG.addColorStop(0.35,'rgba(255,255,255,0.9)');
-    sG.addColorStop(0.65,'rgba(255,255,255,0.3)');
-    sG.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=sG; ctx.fill(); ctx.restore();
-
-    // L4: Sharp specular line
-    ctx.save();
-    var sl = offE(topE, 0.08, Math.PI/2);
-    ctx.beginPath(); sc(sl);
-    ctx.lineWidth = Math.max(1.5, stream.width*0.03); ctx.lineCap='round';
-    var shim = Math.sin(time*0.0006+stream.phase);
-    var lG = ctx.createLinearGradient(s0.x,s0.y,sL.x,sL.y);
-    lG.addColorStop(0,'rgba(255,255,255,0.05)');
-    lG.addColorStop(0.12,'rgba(255,255,255,'+(0.65+shim*0.1)+')');
-    lG.addColorStop(0.3,'rgba(255,255,255,0.08)');
-    lG.addColorStop(0.5,'rgba(255,255,255,'+(0.75+shim*0.1)+')');
-    lG.addColorStop(0.7,'rgba(255,255,255,0.06)');
-    lG.addColorStop(0.85,'rgba(255,255,255,'+(0.6+shim*0.08)+')');
-    lG.addColorStop(1,'rgba(255,255,255,0.04)');
-    ctx.strokeStyle=lG; ctx.stroke(); ctx.restore();
-
-    // L5: Bottom dark crescent
-    ctx.save();
-    var dl = offE(botE, 0.06, -Math.PI/2);
-    ctx.beginPath(); sc(dl);
-    ctx.lineWidth=Math.max(2,stream.width*0.06); ctx.lineCap='round';
-    ctx.strokeStyle='rgba(145,155,180,0.30)'; ctx.filter='blur(2px)'; ctx.stroke(); ctx.restore();
-
-    // L6: Edge outlines
-    ctx.save(); ctx.beginPath(); sc(topE); ctx.lineWidth=1; ctx.strokeStyle='rgba(155,165,190,0.25)'; ctx.stroke(); ctx.restore();
-    ctx.save(); ctx.beginPath(); sc(botE); ctx.lineWidth=1.5; ctx.strokeStyle='rgba(145,155,180,0.30)'; ctx.stroke(); ctx.restore();
-
-    // L7: Sliding shimmer
-    ctx.save(); ctx.beginPath(); shape(); ctx.clip();
-    var sp2 = ((time*0.00013+stream.phase*0.5)%1.6)-0.3;
-    var shG = ctx.createLinearGradient(s0.x,s0.y,sL.x,sL.y);
-    var cl=function(v){return Math.max(0,Math.min(1,v));};
-    var sa=cl(sp2-0.1),sb2=cl(sp2+0.1),sm=cl((sa+sb2)/2);
-    if(sb2-sa>0.01){shG.addColorStop(cl(sa-0.05),'rgba(255,255,255,0)');shG.addColorStop(sa,'rgba(255,255,255,0.15)');shG.addColorStop(sm,'rgba(255,255,255,0.4)');shG.addColorStop(sb2,'rgba(255,255,255,0.15)');shG.addColorStop(cl(sb2+0.05),'rgba(255,255,255,0)');}
-    else{shG.addColorStop(0,'rgba(255,255,255,0)');shG.addColorStop(1,'rgba(255,255,255,0)');}
-    ctx.fillStyle=shG;
-    ctx.fillRect(Math.min(s0.x,sL.x)-200,Math.min(s0.y,sL.y)-200,Math.abs(sL.x-s0.x)+400,Math.abs(sL.y-s0.y)+400);
-    ctx.restore();
-
-    return anim;
-  }
-
-  function drawMercury(time) {
-    // Scroll-based dissolve: mercury fades as user scrolls past hero
+  var t0 = null;
+  function drawMercury(ts) {
+    if (!t0) t0 = ts;
+    var elapsed = (ts - t0) * 0.001;
     var heroH = window.innerHeight;
-    var fadeStart = heroH * 0.15;  // start fading at 15% scroll
-    var fadeEnd = heroH * 0.75;    // fully gone at 75% scroll
-    var fadeProgress = Math.max(0, Math.min(1, (scrollY - fadeStart) / (fadeEnd - fadeStart)));
+    var fadeProgress = Math.max(0, Math.min(1, (scrollY - heroH*0.15) / (heroH*0.60)));
     var mercuryOpacity = 1 - fadeProgress;
     canvas.style.opacity = mercuryOpacity;
-
-    // Skip rendering if fully transparent (performance)
-    if (mercuryOpacity < 0.01) {
-      requestAnimationFrame(drawMercury);
-      return;
+    if (mercuryOpacity > 0.005) {
+      gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(prog); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, elapsed);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
-
-    ctx.clearRect(0,0,W,H);
-    var animSpines = [];
-    for (var i=streams.length-1; i>=0; i--) animSpines[i] = drawStream(streams[i], time);
-
-    beads.forEach(function(b) {
-      var sp=animSpines[b.si]; if(!sp||!sp[b.idx])return; var pt=sp[b.idx];
-      var bx=pt.x+b.ox+Math.cos(time*b.speed*0.7+b.phase)*1.5, by=pt.y+b.oy+Math.sin(time*b.speed+b.phase)*2;
-      ctx.save(); ctx.beginPath(); ctx.arc(bx,by,b.r,0,Math.PI*2);
-      var g=ctx.createRadialGradient(bx-b.r*0.3,by-b.r*0.3,0,bx,by,b.r);
-      g.addColorStop(0,'rgba(255,255,255,0.95)'); g.addColorStop(0.4,'rgba(215,222,238,0.7)'); g.addColorStop(1,'rgba(170,178,200,0.35)');
-      ctx.fillStyle=g; ctx.fill(); ctx.restore();
-    });
-
-    sparkles.forEach(function(sp) {
-      var spine=animSpines[sp.si]; if(!spine||!spine[sp.idx])return; var pt=spine[sp.idx];
-      var br=Math.pow(Math.max(0,Math.sin(time*sp.speed+sp.phase)),4); if(br<0.1)return;
-      var x=pt.x+Math.cos(pt.perpA)*pt.w*sp.off, y=pt.y+Math.sin(pt.perpA)*pt.w*sp.off;
-      ctx.save(); ctx.globalAlpha=br*0.9; var sz=sp.size*(0.5+br*0.5);
-      var gl=ctx.createRadialGradient(x,y,0,x,y,sz*5);
-      gl.addColorStop(0,'rgba(255,255,255,0.6)'); gl.addColorStop(0.3,'rgba(240,245,255,0.15)'); gl.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=gl; ctx.beginPath(); ctx.arc(x,y,sz*5,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,sz*0.8,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=0.8;
-      ctx.beginPath(); ctx.moveTo(x-sz*3,y); ctx.lineTo(x+sz*3,y); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x,y-sz*3); ctx.lineTo(x,y+sz*3); ctx.stroke();
-      ctx.restore();
-    });
-
     requestAnimationFrame(drawMercury);
   }
   requestAnimationFrame(drawMercury);

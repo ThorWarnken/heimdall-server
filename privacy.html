@@ -179,12 +179,13 @@
         </div>
 
         <h2>6. Permissions We Request</h2>
-        <p>Heimdall requests the following Google OAuth scope:</p>
-        <ul>
-            <li><code>https://www.googleapis.com/auth/gmail.modify</code> — This scope allows Heimdall to read email headers (to identify subscriptions) and modify emails (to move unwanted subscription emails to trash when you click "Unsubscribe"). This is the narrowest scope that supports both reading headers and managing emails on your behalf.</li>
-        </ul>
-        <p>We follow the principle of minimum required access and only request the scopes necessary for Heimdall to function.</p>
-
+       <p>Heimdall requests the following Google OAuth scopes:</p>
+<ul>
+    <li><code>https://www.googleapis.com/auth/gmail.readonly</code> — Allows Heimdall to read email headers to identify subscription and promotional emails.</li>
+    <li><code>https://www.googleapis.com/auth/gmail.modify</code> — Allows Heimdall to modify emails, such as moving unwanted subscription emails to trash when you click "Unsubscribe."</li>
+    <li><code>https://www.googleapis.com/auth/userinfo.email</code> — Allows Heimdall to retrieve your email address to verify your subscription status.</li>
+</ul>
+<p>We follow the principle of minimum required access and only request the scopes necessary for Heimdall to function.</p>
         <h2>7. Authentication &amp; Security</h2>
         <ul>
             <li>We use Google OAuth 2.0 for secure authentication.</li>

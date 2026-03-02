@@ -161,7 +161,7 @@ footer .fc2{font-size:.7rem;color:rgba(200,200,210,0.4)}.flinks{display:flex;gap
 @media(max-width:768px){.cursor-light{display:none}}
 
 /* === HERO TEXT SHIMMER === */
-.hero h1{position:relative;background:linear-gradient(90deg,var(--ink) 0%,var(--ink) 40%,var(--chrome-hi) 50%,var(--ink) 60%,var(--ink) 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:textShimmer 5s ease-in-out infinite}
+.hero h1{position:relative;background:linear-gradient(90deg,var(--ink) 0%,var(--ink) 40%,var(--chrome-hi) 50%,var(--ink) 60%,var(--ink) 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:textShimmer 5s ease-in-out infinite;padding-bottom:0.15em}
 @keyframes textShimmer{0%,100%{background-position:100% 0}50%{background-position:-100% 0}}
 
 /* === 3D TILT FEATURE CARDS === */
@@ -493,12 +493,23 @@ footer .fc2{font-size:.7rem;color:rgba(200,200,210,0.4)}.flinks{display:flex;gap
 </div></section>
 
 <section class="price-band" id="pricing"><div class="price-inner">
-<div class="dark-rv"><h2 class="sg">Simple pricing.</h2><p>One plan. No tiers. No enterprise upsell. Start free, then less than a coffee per month.</p></div>
+<div class="dark-rv"><h2 class="sg">Simple pricing.</h2><p>Monthly or save with annual. No tiers. No enterprise upsell. Start free, then less than a coffee per month.</p></div>
+<div style="display:flex;flex-direction:column;gap:1rem">
 <div class="pcard dark-rv dark-rvd1">
 <div class="p-amt"><span class="p-d">$</span><span class="p-v sg">2.99</span><span class="p-per">/mo</span></div>
 <div class="p-trial">&#8594; Starts with 7 days free</div>
 <ul class="p-list"><li>Unlimited inbox scans</li><li>One-click unsubscribe</li><li>Real-time detection</li><li>Priority support</li><li>Cancel anytime</li></ul>
 <a href="https://chromewebstore.google.com/detail/heimdall/kdklpoodjbgjgjpcfeafabpfdhjlhdcb" target="_blank" class="btn-c p-cta">Start free trial</a><p class="p-note">7-day free trial · Cancel anytime</p>
+</div>
+<div class="pcard dark-rv" style="border-color:rgba(176,176,192,0.35)">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.2rem">
+<div class="p-amt"><span class="p-d">$</span><span class="sg" style="font-family:'Space Grotesk',sans-serif;font-size:3.2rem;font-weight:700;letter-spacing:-2px;line-height:1;color:#fff">19.99</span><span class="p-per">/yr</span></div>
+<span style="font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;background:rgba(176,176,192,0.15);border:1px solid rgba(176,176,192,0.3);color:#b0b0c0;padding:.25rem .6rem;border-radius:4px">Save 44%</span>
+</div>
+<div class="p-trial">&#8594; Best value · 7 days free</div>
+<ul class="p-list"><li>Unlimited inbox scans</li><li>One-click unsubscribe</li><li>Real-time detection</li><li>Priority support</li><li>Cancel anytime</li></ul>
+<a href="https://chromewebstore.google.com/detail/heimdall/kdklpoodjbgjgjpcfeafabpfdhjlhdcb" target="_blank" class="btn-c p-cta">Start free trial</a><p class="p-note">7-day free trial · Cancel anytime</p>
+</div>
 </div>
 </div></section>
 

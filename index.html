@@ -9,8 +9,101 @@
 <link rel="canonical" href="https://heimdallprotections.com/" />
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Heimdall — Guard Your Inbox</title>
-<style>
+<title>Heimdall — Guard Your Inbox | Gmail Unsubscribe & Spam Cleaner Chrome Extension</title>
+<meta name="description" content="Heimdall is a privacy-first Chrome extension that scans your Gmail inbox, detects spam and subscription emails, and lets you unsubscribe with one click. Free 7-day trial.">
+<meta name="keywords" content="Gmail unsubscribe, email spam cleaner, Chrome extension, inbox cleaner, unsubscribe from emails, email management, Gmail spam filter, subscription manager, email cleanup tool, privacy-first email tool">
+<meta name="author" content="Heimdall">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://heimdallprotections.com/">
+<meta property="og:title" content="Heimdall — Guard Your Inbox">
+<meta property="og:description" content="One-click unsubscribe from spam and promotional emails in Gmail. Privacy-first Chrome extension with a free 7-day trial.">
+<meta property="og:image" content="https://heimdallprotections.com/icon128.png">
+<meta property="og:site_name" content="Heimdall">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Heimdall — Guard Your Inbox">
+<meta name="twitter:description" content="One-click unsubscribe from spam and promotional emails in Gmail. Privacy-first Chrome extension with a free 7-day trial.">
+<meta name="twitter:image" content="https://heimdallprotections.com/icon128.png">
+
+<!-- Structured Data: SoftwareApplication -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Heimdall",
+  "description": "A privacy-first Chrome extension that scans your Gmail inbox, detects spam and subscription emails, and lets you unsubscribe with one click.",
+  "url": "https://heimdallprotections.com/",
+  "applicationCategory": "BrowserApplication",
+  "operatingSystem": "Chrome",
+  "browserRequirements": "Google Chrome",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free 7-day trial, then monthly subscription"
+  },
+  "creator": {
+    "@type": "Organization",
+    "name": "Heimdall",
+    "url": "https://heimdallprotections.com/"
+  },
+  "featureList": [
+    "One-click email unsubscribe",
+    "Gmail spam and subscription detection",
+    "Privacy-first local processing",
+    "Subscription management dashboard",
+    "30-second setup"
+  ],
+  "screenshot": "https://heimdallprotections.com/icon128.png",
+  "installUrl": "https://chromewebstore.google.com/detail/heimdall/kdklpoodjbgjgjpcfeafabpfdhjlhdcb"
+}
+</script>
+
+<!-- Structured Data: FAQPage -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Heimdall?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Heimdall is a Chrome extension that scans your Gmail inbox to identify spam and subscription emails, then lets you unsubscribe from them with one click."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Heimdall safe to use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Heimdall is privacy-first. All email processing happens locally in your browser. Your data never leaves your device."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does Heimdall work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Install the Chrome extension, sign in with Google OAuth, and Heimdall scans your inbox to find promotional senders. You then choose which subscriptions to unsubscribe from with one click."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Heimdall offer a free trial?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Heimdall offers a free 7-day trial with full access to all features. After the trial, it costs less than a coffee per month."
+      }
+    }
+  ]
+}
+</script><style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#fafaf8;--bg2:#f2f2ee;--ink:#0a0a0c;--ink2:#3a3a42;--ink3:#6a6a78;--ink4:#9a9aaa;--dim:#c8c8d0;--faint:#e8e8e6;--chrome:#8a8a9c;--chrome-hi:#b0b0c0}
@@ -219,7 +312,7 @@ footer .fc2{font-size:.7rem;color:rgba(200,200,210,0.4)}.flinks{display:flex;gap
   <canvas id="loader-canvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
   <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none;">
     <div id="loader-glow" style="position:absolute;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(130,130,170,0.14) 0%,transparent 70%);opacity:0;transition:opacity 1s ease 0.2s;"></div>
-    <img src="icon128.png" id="loader-icon" style="width:110px;height:110px;border-radius:20px;position:relative;z-index:2;opacity:0;transform:scale(0.78);transition:opacity 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s,transform 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s;">
+    <img src="icon128.png" id="loader-icon" alt="Heimdall logo" style="width:110px;height:110px;border-radius:20px;position:relative;z-index:2;opacity:0;transform:scale(0.78);transition:opacity 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s,transform 0.9s cubic-bezier(0.16,1,0.3,1) 0.1s;">
     <div id="loader-brand" style="margin-top:30px;font-family:'Space Grotesk',sans-serif;font-size:0.6rem;letter-spacing:7px;text-transform:uppercase;color:rgba(185,185,210,0);transition:color 0.7s ease 0.5s;position:relative;z-index:2;">HEIMDALL</div>
   </div>
 </div>

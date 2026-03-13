@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /server.js
+Disallow: /shader-live-preview.html
+
+Sitemap: https://heimdallprotections.com/sitemap.xml
